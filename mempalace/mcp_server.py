@@ -618,6 +618,17 @@ def tool_add_drawer(
         f"drawer_{wing}_{room}_{hashlib.sha256((wing + room + content).encode()).hexdigest()[:24]}"
     )
 
+    # ── Storage Cap (Phase 4.2) ───────────────────────────────────────────
+    try:
+        existing_in_wing = col.get(where={"wing": wing}, include=[])
+        if existing_in_wing and len(existing_in_wing.get("ids", [])) >= 500:
+            return {
+                "success": False,
+                "error": f"Storage cap exceeded: Wing '{wing}' reached the 500-drawer limit. Please delete old drawers or use a new wing."
+            }
+    except Exception:
+        pass
+
     _wal_log(
         "add_drawer",
         {
