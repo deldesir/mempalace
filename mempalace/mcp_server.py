@@ -795,6 +795,15 @@ def tool_add_drawer(
     if not col:
         return _no_palace()
 
+    # IIAB: 500-drawer per-wing storage cap
+    try:
+        _wing_count = col.count(where={"wing": wing})
+        if _wing_count >= 500:
+            return {"success": False, "error": f"Wing '{wing}' has reached the 500-drawer limit"}
+    except Exception:
+        pass  # If count fails, allow the add to proceed
+
+
     drawer_id = (
         f"drawer_{wing}_{room}_{hashlib.sha256((wing + room + content).encode()).hexdigest()[:24]}"
     )
@@ -1129,6 +1138,15 @@ def tool_diary_write(agent_name: str, entry: str, topic: str = "general", wing: 
     col = _get_collection(create=True)
     if not col:
         return _no_palace()
+
+    # IIAB: 500-drawer per-wing storage cap
+    try:
+        _wing_count = col.count(where={"wing": wing})
+        if _wing_count >= 500:
+            return {"success": False, "error": f"Wing '{wing}' has reached the 500-drawer limit"}
+    except Exception:
+        pass  # If count fails, allow the add to proceed
+
 
     now = datetime.now()
     entry_id = (
