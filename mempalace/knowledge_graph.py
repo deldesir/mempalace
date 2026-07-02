@@ -46,7 +46,12 @@ from .config import sanitize_iso_temporal
 from .ids import make_triple_id
 
 
-DEFAULT_KG_PATH = os.path.expanduser("~/.mempalace/knowledge_graph.sqlite3")
+# MEMPALACE_KG_PATH pins the graph to one file regardless of who runs the
+# process. Without it, the path follows $HOME, and a service, a cron job,
+# and an interactive shell can each silently open a different (empty) graph.
+DEFAULT_KG_PATH = os.environ.get("MEMPALACE_KG_PATH") or os.path.expanduser(
+    "~/.mempalace/knowledge_graph.sqlite3"
+)
 
 
 def _is_date_only_temporal(value: str) -> bool:
