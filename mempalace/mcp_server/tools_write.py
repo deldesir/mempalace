@@ -486,6 +486,9 @@ def _build_chunk_rows(drawer_id: str, content: str, meta: dict, chunk_size: int)
     return chunk_ids, chunk_docs, chunk_metas
 
 
+# IIAB: drawers a wing may hold before tool_add_drawer refuses (one wing per WhatsApp user)
+WING_DRAWER_CAP = 500
+
 def tool_add_drawer(
     wing: str, room: str, content: str, source_file: str = None, added_by: str = "mcp"
 ):
@@ -514,6 +517,18 @@ def tool_add_drawer(
     col = _get_collection(create=True)
     if not col:
         return _collection_error_or_no_palace()
+
+    # IIAB: per-wing storage cap for the multi-tenant WhatsApp deployment (a wing per user).
+    # Re-ported here when upstream split mcp_server.py into this package (2026-11).
+    try:
+        existing_in_wing = col.get(where={"wing": wing}, include=[])
+        if existing_in_wing and len(existing_in_wing.get("ids", [])) >= WING_DRAWER_CAP:
+            return {
+                "success": False,
+                "error": f"Storage cap exceeded: Wing '{wing}' reached the {WING_DRAWER_CAP}-drawer limit. Please delete old drawers or use a new wing.",
+            }
+    except Exception:
+        pass
 
     drawer_id = make_drawer_id_from_content(wing, room, content)
 
